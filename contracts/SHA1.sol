@@ -7,6 +7,8 @@ pragma solidity ^0.4.18;
 /*
     SHA1 implementation in Solidity assembly.
     It requires roughly 56k gas per 512 bit block hashed
+    
+    https://github.com/Arachnid/solsha1/blob/master/contracts/sha1.sol
 */
 contract SHA1 {
 
