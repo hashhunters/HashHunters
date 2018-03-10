@@ -15,35 +15,35 @@ contract HashHunters {
     
     struct HashPuzzleData {
         address owner;
+        uint256 fee;
         uint256 bounty;
         bytes hash;
-        bytes32 hashAlgorithm;
+        bytes32 hashAlgorithmName;
         string description;
         string password;
         bool solved;
     }
     
-    function HashHunters(uint8 fee) public {
+    function HashHunters(uint8 _fee) public payable {
         contractOwner = msg.sender;
-        contractOwnerFee = fee;
-    }
-    
-    modifier isOwner() {
-        require(msg.sender == contractOwner);
-        _;
+        contractOwnerFee = _fee;
     }
 
     function addNewHashAlgorithm(
         bytes32 _name,   // SHA1, MD4, NTLMv1, ...
         address _address // contract address of new hash algorithm supported
-    ) public isOwner {
+    ) public {
+        require(msg.sender == contractOwner);
+        
         if(hashAlgorithmAddresses[_name] == 0)
             hashAlgorithms.push(_name);
         
         hashAlgorithmAddresses[_name] = _address;
     }
     
-    function changeFee(uint8 newFee) public isOwner {
+    function changeFee(uint8 newFee) public {
+        require(msg.sender == contractOwner);
+        
         // 0 to 10 percents fee maximum for contract owner if hash being cracked
         require(0 <= newFee && newFee <= 10);
         
@@ -61,17 +61,18 @@ contract HashHunters {
         bytes32 keccak256OfHash = keccak256(_hash);
         
         // TODO: check if hash puzzle exists and not solved
-        // keccak256(toLower(_hash)|toLower(_hashAlgorithm)) // keccak256(...) returns (bytes32)
+        // keccak256(_hash|toLower(_hashAlgorithmName)) // keccak256(...) returns (bytes32)
         
         HashPuzzleData memory hpd;
         hpd.owner = msg.sender;
-        hpd.bounty = msg.value;
+        hpd.fee = (msg.value / 100) * contractOwnerFee;
+        hpd.bounty = msg.value - hpd.fee;
         hpd.hash = _hash;       // TODO: check hash for valid symbols
-        hpd.hashAlgorithm = _hashAlgorithmName;
+        hpd.hashAlgorithmName = _hashAlgorithmName;
         hpd.description = _description;
         hpd.solved = false;
 
-        HashPuzzle hashPuzzleAddress = new HashPuzzle(
+        HashPuzzle hashPuzzleAddress = (new HashPuzzle).value(msg.value)(
             keccak256OfHash, 
             hashAlgorithmAddresses[_hashAlgorithmName],
             contractOwnerFee
@@ -97,5 +98,31 @@ contract HashHunters {
         
         return false;
     }
+    
+    function increaseBounty(address _hashPuzzleAddress) public payable {
+        require(0 < msg.value);
+        
+        HashPuzzle hp = HashPuzzle(_hashPuzzleAddress);
+        hp.increaseBounty();
+        
+        hashPuzzles[_hashPuzzleAddress].fee = hp.checkFee();
+        hashPuzzles[_hashPuzzleAddress].bounty = hp.checkBounty();
+    }
+    
+    function getHashPuzzles() public view returns (address[]) {
+        return hashPuzzleContracts;
+    }
+    
+    function getHashPuzzleData(
+        address _hashPuzzleAddress
+    ) public view returns (uint256, bytes, bytes32, string, string, bool) {
+        return (
+            hashPuzzles[_hashPuzzleAddress].bounty,
+            hashPuzzles[_hashPuzzleAddress].hash,
+            hashPuzzles[_hashPuzzleAddress].hashAlgorithmName,
+            hashPuzzles[_hashPuzzleAddress].description,
+            hashPuzzles[_hashPuzzleAddress].password,
+            hashPuzzles[_hashPuzzleAddress].solved
+        );
+    }
 }
-
