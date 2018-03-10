@@ -32,6 +32,8 @@ contract HashPuzzle {
         address _hashAlgAddress, 
         uint8 _percentsFee
     ) public payable {
+        require(0 < msg.value);
+        
         // 0 to 10 percents fee maximum for contract owner if hash being cracked
         require(0 <= _percentsFee && _percentsFee <= 10);
         
@@ -45,19 +47,26 @@ contract HashPuzzle {
         fee = (msg.value / 100) * percentsFee;
         bounty = msg.value - fee;
     }
-    
-    modifier isOwner() {
-        require(msg.sender == contractOwner);
-        _;
-    }
 
-    function increaseBounty() public isOwner payable {
+    function increaseBounty() public payable {
+        require(0 < msg.value);
+        require(msg.sender == contractOwner);
         fee = (this.balance / 100) * percentsFee;
         bounty = this.balance - fee;
     }
 
     function checkBounty() public view returns (uint256) {
         return bounty;
+    }
+    
+    function checkPercentsFee() public view returns (uint8) {
+        require(msg.sender == contractOwner);
+        return percentsFee;
+    }
+    
+    function checkFee() public view returns (uint256) {
+        require(msg.sender == contractOwner);
+        return fee;
     }
 
     function solve(bytes _message) public returns (bool) {
