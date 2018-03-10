@@ -1,31 +1,30 @@
 pragma solidity ^0.4.18;
 
-// https://github.com/crypto-browserify/hash-test-vectors
-// The nist test vectors expanded to cover every hash function supported by node.js, 
-// output is saved in a json file, so that it is possible to run tests in the browser.
-
 /*
-    SHA1 implementation in Solidity assembly.
-    It requires roughly 56k gas per 512 bit block hashed
-    
-    https://github.com/Arachnid/solsha1/blob/master/contracts/sha1.sol
-*/
+ *  SHA1 implementation in Solidity assembly.
+ *  It requires roughly 56k gas per 512 bit block hashed
+ *  
+ *  https://github.com/Arachnid/solsha1/blob/master/contracts/sha1.sol
+ */
 contract SHA1 {
 
     /* 
-        The fallback function below will be called for each message that is 
-        sent to this contract (as there is no other function to call).
-        However, if Ether is sent to this contract, an exception will occur.
-        That is because this contract does not have the "payable" modifier.
-    */
+     *  The fallback function below will be called for each message that is 
+     *  sent to this contract (as there is no other function to call).
+     *  However, if Ether is sent to this contract, an exception will occur.
+     *  That is because this contract does not have the "payable" modifier.
+     */
     
     function() public {
         assembly {
             switch div(calldataload(0), exp(2, 224))
             
-            // check function name (prevent calls frpm inappropriate functions): 
-            // bytes4(keccak256("sha1(bytes)")) is 0x1605782b
-            // bytes4(keccak256("keccak256OfCalcHash(bytes)")) is 0xa7b5f164
+            /* 
+             *  require concrete signature for the caller function:
+             *
+             *  bytes4(keccak256("sha1(bytes)")) is 0x1605782b
+             *  bytes4(keccak256("keccak256OfCalcHash(bytes)")) is 0xa7b5f164
+             */
             case 0xa7b5f164 { } 
             default { revert(0, 0) }
             
@@ -111,21 +110,20 @@ contract SHA1 {
                 h := and(add(h, x), 0xFFFFFFFF00FFFFFFFF00FFFFFFFF00FFFFFFFF00FFFFFFFF)
             }
             h := or(or(or(or(and(div(h, exp(2, 32)), 0xFFFFFFFF00000000000000000000000000000000), and(div(h, exp(2, 24)), 0xFFFFFFFF000000000000000000000000)), and(div(h, exp(2, 16)), 0xFFFFFFFF0000000000000000)), and(div(h, exp(2, 8)), 0xFFFFFFFF00000000)), and(h, 0xFFFFFFFF))
-            ////log1(0, 0, h)
-            // ======== sha1(message) ========= //
-            //
-            //mstore(0, h)
-            //return(12, 20)
-            //
-            // === keccak256(sha1(message)) === //
+            //log1(0, 0, h)
             
             // store 32 bytes in memory at position 0
             mstore(0, h)
             
-            let sh3 := keccak256(12, 20)
-            mstore(0, sh3)
+            // ======== sha1(message) ========= //
+            
+            //return(12, 20)
+            
+            // === keccak256(sha1(message)) === //
+            
+            let hash := keccak256(12, 20)
+            mstore(0, hash)
             return(0, 32)
-            // ================================ //
         }
     }
 }
