@@ -7,6 +7,10 @@ pragma solidity ^0.4.18;
  *  https://github.com/Arachnid/solsha1/blob/master/contracts/sha1.sol
  */
 contract SHA1 {
+    
+    //function calcHash(bytes message) private pure returns (bytes ret) {
+    //    
+    //}
 
     /* 
      *  The fallback function below will be called for each message that is 
@@ -14,11 +18,11 @@ contract SHA1 {
      *  However, if Ether is sent to this contract, an exception will occur.
      *  That is because this contract does not have the "payable" modifier.
      */
-    
+
     function() public {
         assembly {
             switch div(calldataload(0), exp(2, 224))
-            
+
             /* 
              *  require concrete signature for the caller function:
              *
@@ -27,7 +31,7 @@ contract SHA1 {
              */
             case 0xa7b5f164 { } 
             default { revert(0, 0) }
-            
+
             let data := add(calldataload(4), 4)
 
             // Get the data length, and point data at the first byte
@@ -111,16 +115,16 @@ contract SHA1 {
             }
             h := or(or(or(or(and(div(h, exp(2, 32)), 0xFFFFFFFF00000000000000000000000000000000), and(div(h, exp(2, 24)), 0xFFFFFFFF000000000000000000000000)), and(div(h, exp(2, 16)), 0xFFFFFFFF0000000000000000)), and(div(h, exp(2, 8)), 0xFFFFFFFF00000000)), and(h, 0xFFFFFFFF))
             //log1(0, 0, h)
-            
+
             // store 32 bytes in memory at position 0
             mstore(0, h)
-            
+
             // ======== sha1(message) ========= //
-            
+
             //return(12, 20)
-            
+
             // === keccak256(sha1(message)) === //
-            
+
             let hash := keccak256(12, 20)
             mstore(0, hash)
             return(0, 32)

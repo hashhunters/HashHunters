@@ -60,12 +60,10 @@ contract HashPuzzle {
     }
     
     function checkPercentsFee() public view returns (uint8) {
-        require(msg.sender == contractOwner);
         return percentsFee;
     }
     
     function checkFee() public view returns (uint256) {
-        require(msg.sender == contractOwner);
         return fee;
     }
 
@@ -84,7 +82,7 @@ contract HashPuzzle {
             contractOwner.transfer(feeBeforeTransfer);
         
             // send bounty
-            msg.sender.transfer(bountyBeforeTransfer);
+            tx.origin.transfer(bountyBeforeTransfer);
             
             HashCracked(msg.sender, bounty, _message, keccak256OfHash, keccak256OfCalcHash);
             return true;
