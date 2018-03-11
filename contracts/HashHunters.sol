@@ -60,9 +60,6 @@ contract HashHunters {
         
         bytes32 keccak256OfHash = keccak256(_hash);
         
-        // TODO: check if hash puzzle exists and not solved
-        // keccak256(_hash|toLower(_hashAlgorithmName)) // keccak256(...) returns (bytes32)
-        
         HashPuzzleData memory hpd;
         hpd.owner = msg.sender;
         hpd.fee = (msg.value / 100) * contractOwnerFee;
@@ -77,7 +74,7 @@ contract HashHunters {
             hashAlgorithmAddresses[_hashAlgorithmName],
             contractOwnerFee
         );
-            
+  
         hashPuzzles[hashPuzzleAddress] = hpd;
         hashPuzzleContracts.push(hashPuzzleAddress);
         
@@ -103,7 +100,7 @@ contract HashHunters {
         require(0 < msg.value);
         
         HashPuzzle hp = HashPuzzle(_hashPuzzleAddress);
-        hp.increaseBounty();
+        hp.increaseBounty.value(msg.value)();
         
         hashPuzzles[_hashPuzzleAddress].fee = hp.checkFee();
         hashPuzzles[_hashPuzzleAddress].bounty = hp.checkBounty();
@@ -124,6 +121,21 @@ contract HashHunters {
             hashPuzzles[_hashPuzzleAddress].password,
             hashPuzzles[_hashPuzzleAddress].solved
         );
+    }
+    
+    function getContractOwnerFee() public view returns (uint8) {
+        return contractOwnerFee;
+    }
+    
+    function getBalance() public view returns (uint256) {
+        require(msg.sender == contractOwner);
+        return this.balance;
+    }
+    
+    function sendBalance(uint256 amount) public {
+        require(msg.sender == contractOwner);
+        require(0 < amount && amount <= this.balance);
+        contractOwner.transfer(amount);
     }
     
     function() public payable {
