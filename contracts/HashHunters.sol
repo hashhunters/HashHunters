@@ -125,4 +125,7 @@ contract HashHunters {
             hashPuzzles[_hashPuzzleAddress].solved
         );
     }
+    
+    function() public payable {
+    }
 }
